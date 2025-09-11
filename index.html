@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relic Synergy Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans p-6">
+
+  <header class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-800">Relic Synergy Dashboard</h1>
+  </header>
+
+  <!-- Filters -->
+  <section class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <input
+      id="task-search"
+      type="text"
+      placeholder="Search tasks..."
+      class="px-4 py-2 border rounded w-full sm:w-1/3"
+    >
+
+    <select id="sort-by" class="px-4 py-2 border rounded w-full sm:w-1/4">
+      <option value="points-desc">Points Descending</option>
+      <option value="points-asc">Points Ascending</option>
+      <option value="synergy-desc">Synergy Descending</option>
+    </select>
+  </section>
+
+  <!-- Synergy summary -->
+  <section id="synergy-summary" class="mb-6 p-4 bg-white rounded shadow hidden">
+    <p>Total Synergy Points: <span id="total-synergy-points">0</span></p>
+  </section>
+
+  <!-- Relics -->
+  <section id="relics-container" class="mb-6"></section>
+
+  <!-- Tasks Table -->
+  <section class="overflow-x-auto">
+    <table id="task-table" class="min-w-full bg-white rounded shadow overflow-hidden">
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Task</th>
+          <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Points</th>
+          <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Requirements</th>
+          <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Synergy</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <footer class="mt-6 text-sm text-gray-500">
+    &copy; 2025 Relic Synergy Dashboard
+  </footer>
+
+</body>
+</html>
