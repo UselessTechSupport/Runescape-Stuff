@@ -28,9 +28,6 @@ A web-based tool for planning and optimizing your relic selections and tasks in 
 ---
 
 ## 📦 File Structure
-├── index.html # Main HTML, CSS, and JavaScript
-├── README.md # This file
-└── .gitignore # Optional: ignore temporary or sensitive files
 
 > All functionality is self-contained in `index.html` using TailwindCSS.
 
