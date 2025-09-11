@@ -65,19 +65,19 @@ Simply double-click the index.html file, or right-click and select Open With →
 4. **(Optional) Run a simple local server**
 Python 3:
 
-'''bash
-Copy code
-cd path/to/project
-python -m http.server 8000'''
+>     bash
+>     cd path/to/project
+>     python -m http.server 8000
+
 Then open http://localhost:8000 in your browser.
 
 Node.js (http-server):
 
-'''bash
-Copy code
-npm install -g http-server
-cd path/to/project
-http-server'''
+  >     bash
+   >     npm install -g http-server
+   >     cd path/to/project
+   >     http-server
+
 Then open the URL shown in the terminal.
 
 5. **Start planning**
