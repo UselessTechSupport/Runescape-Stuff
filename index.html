@@ -215,29 +215,44 @@ function escapeHtml(s) {
 function renderSelectedRelicDetails() {
   selectedRelicsTableBodyEl.innerHTML = '';
   const tiers = Object.keys(selectedRelics).map(Number).sort((a,b)=>a-b);
-  if (!tiers.length) { selectedRelicsContainerEl.classList.add('hidden'); return; }
+  if (!tiers.length) { 
+    selectedRelicsContainerEl.classList.add('hidden'); 
+    return; 
+  }
   selectedRelicsContainerEl.classList.remove('hidden');
 
   tiers.forEach(tier => {
     const sel = selectedRelics[tier];
     const relicTierData = relics.find(r => r.Tier === tier);
+
     let details = '';
+    let imageUrl = '';
     if (relicTierData) {
+      if (sel.name === relicTierData.Relic1) imageUrl = relicTierData.Relic1Image || '';
+      else if (sel.name === relicTierData.Relic2) imageUrl = relicTierData.Relic2Image || '';
+      else if (sel.name === relicTierData.Relic3) imageUrl = relicTierData.Relic3Image || '';
+      else if (sel.name === relicTierData.Relic4) imageUrl = relicTierData.Relic4Image || '';
+      
       if (sel.name === relicTierData.Relic1) details = relicTierData.Relic1Details || '';
       else if (sel.name === relicTierData.Relic2) details = relicTierData.Relic2Details || '';
       else if (sel.name === relicTierData.Relic3) details = relicTierData.Relic3Details || '';
+      else if (sel.name === relicTierData.Relic4) details = relicTierData.Relic4Details || '';
     }
 
     const tr = document.createElement('tr');
     tr.className = 'border-b border-gray-200';
     tr.innerHTML = `
       <td class="px-4 py-2 text-sm text-gray-900">Tier ${tier}</td>
-      <td class="px-4 py-2 text-sm text-gray-900">${sel.name}</td>
+      <td class="px-4 py-2 text-sm text-gray-900 flex items-center gap-2">
+        ${imageUrl ? `<img src="${imageUrl}" class="w-6 h-6 object-contain rounded-full">` : ''}
+        ${sel.name}
+      </td>
       <td class="px-4 py-2 text-sm text-gray-900">${details}</td>
     `;
     selectedRelicsTableBodyEl.appendChild(tr);
   });
 }
+
 
 function renderRelicDropdowns() {
   relicPlannerEl.innerHTML = '';
@@ -246,31 +261,50 @@ function renderRelicDropdowns() {
     wrapper.className = "bg-gray-100 p-4 rounded-lg shadow-inner";
     wrapper.innerHTML = `
       <label class="block text-sm font-medium text-gray-700 mb-1">Tier ${relic.Tier}</label>
-      <select class="relic-select block w-full rounded-md shadow-sm p-2 text-gray-700" data-tier="${relic.Tier}">
-        <option value="">Select Relic</option>
-        ${relic.Relic1 ? `<option value="${escapeHtml(relic.Relic1)}">${escapeHtml(relic.Relic1)}</option>` : ''}
-        ${relic.Relic2 ? `<option value="${escapeHtml(relic.Relic2)}">${escapeHtml(relic.Relic2)}</option>` : ''}
-        ${relic.Relic3 ? `<option value="${escapeHtml(relic.Relic3)}">${escapeHtml(relic.Relic3)}</option>` : ''}
-      </select>
+      <div class="relic-dropdown relative">
+        <button class="relic-select-btn w-full rounded-md p-2 bg-white border border-gray-300 text-left flex items-center gap-2">
+          Select Relic
+        </button>
+        <div class="relic-options absolute z-10 left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg hidden">
+          ${[1,2,3,4].map(i => {
+            const name = relic[`Relic${i}`];
+            const img = relic[`Relic${i}Image`] || '';
+            return name ? `<div class="relic-option flex items-center gap-2 p-2 hover:bg-gray-100 cursor-pointer" data-name="${name}">
+              ${img ? `<img src="${img}" class="w-6 h-6 object-contain rounded-full">` : ''}
+              ${name}
+            </div>` : '';
+          }).join('')}
+        </div>
+      </div>
     `;
     relicPlannerEl.appendChild(wrapper);
 
-    const selectEl = wrapper.querySelector('select');
-    selectEl.addEventListener('change', (e) => {
-      const val = e.target.value;
-      const tierNum = Number(e.target.dataset.tier);
-      if (val) {
-        const chosen = relics.find(r => r.Relic1 === val || r.Relic2 === val || r.Relic3 === val);
-        if (chosen) selectedRelics[tierNum] = { name: val, synergies: chosen.Synergy || [], tier: tierNum };
-      } else delete selectedRelics[tierNum];
-      renderSelectedRelicDetails();
-      renderTasks();
-      saveRelicsToStorage();
+    const btn = wrapper.querySelector('.relic-select-btn');
+    const optionsContainer = wrapper.querySelector('.relic-options');
+
+    btn.addEventListener('click', () => {
+      optionsContainer.classList.toggle('hidden');
     });
 
-    if (selectedRelics[relic.Tier]) selectEl.value = selectedRelics[relic.Tier].name;
+    optionsContainer.querySelectorAll('.relic-option').forEach(option => {
+      option.addEventListener('click', (e) => {
+        const val = option.dataset.name;
+        const tierNum = relic.Tier;
+        const chosen = relics.find(r => r.Relic1 === val || r.Relic2 === val || r.Relic3 === val || r.Relic4 === val);
+        if (chosen) selectedRelics[tierNum] = { name: val, synergies: chosen.Synergy || [], tier: tierNum };
+        renderSelectedRelicDetails();
+        renderTasks();
+        saveRelicsToStorage();
+        btn.textContent = ''; 
+        if (option.querySelector('img')) btn.appendChild(option.querySelector('img').cloneNode());
+        btn.appendChild(document.createTextNode(val));
+        optionsContainer.classList.add('hidden');
+      });
+    });
   });
 }
+
+
 
 function renderAreaButtons() {
   areaButtonsEl.querySelectorAll('button[data-area-filter]').forEach(btn => {
@@ -334,20 +368,27 @@ function renderTasks() {
   });
 
 filtered.forEach(task => {
-  const { score } = synergyMode==='relic' 
-    ? calculateRelicSynergyScore(task) 
-    : calculateCustomSynergyScore(task);
+  const { score } = synergyMode === 'relic' 
+      ? calculateRelicSynergyScore(task) 
+      : calculateCustomSynergyScore(task);
 
   const tr = document.createElement('tr');
-  tr.className = "border-b border-gray-200";
   tr.innerHTML = `
     <td class="px-4 py-2 text-sm">${escapeHtml(task.Task)}</td>
-    <td class="px-4 py-2 text-sm">${task.Points || 0}</td>
+    <td class="px-4 py-2 text-sm">${score}</td>
     <td class="px-4 py-2 text-sm">${escapeHtml(task.Requirements || 'N/A')}</td>
     <td class="px-4 py-2 text-sm">${score}</td>
   `;
+
+  // Add conditional coloring
+  if (score >= 5) tr.classList.add('bg-green-100');
+  else if (score >= 3) tr.classList.add('bg-yellow-100');
+  else if (score > 0) tr.classList.add('bg-orange-100');
+  else tr.classList.add('bg-red-100');
+
   taskTableBodyEl.appendChild(tr);
 });
+
 
   const totalPoints = filtered.reduce((sum, t) => {
     const s = synergyMode==='relic'? calculateRelicSynergyScore(t).score : calculateCustomSynergyScore(t).score;
