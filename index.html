@@ -69,8 +69,9 @@
         <input type="text" id="task-search" placeholder="Search tasks..." class="w-full sm:w-1/2 p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
         <select id="sort-by" class="w-full sm:w-auto p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
           <option value="points-desc">Sort by Points (High to Low)</option>
+		  <option value="points-asc">Sort by Points (Low to High)</option>
           <option value="synergy-desc">Sort by Synergy (High to Low)</option>
-          <option value="points-asc">Sort by Points (Low to High)</option>
+		  <option value="synergy-asc">Sort by Synergy (Low to High)</option>          
         </select>
         <div id="synergy-mode-toggle" class="flex space-x-2">
           <button class="rounded-full px-4 py-2 font-medium bg-blue-500 text-white transition-all duration-200 active" data-synergy-mode="relic">Relic Synergy</button>
@@ -463,9 +464,6 @@ function renderSavedSynergiesList() {
   });
 }
 
-
-
-
 function renderTasks() {
   taskTableBodyEl.innerHTML = '';
   const searchTerm = taskSearchEl.value.toLowerCase();
@@ -474,6 +472,7 @@ function renderTasks() {
   const selectedCats = Array.from(document.querySelectorAll('#task-category-filters button.bg-blue-500'))
                             .map(b => b.dataset.category);
 
+  // Filter tasks based on search, category, and area
   const filtered = tasks.filter(t => {
     if (currentAreaFilter !== 'all' && t.Area !== currentAreaFilter) return false;
     if (!t.Task.toLowerCase().includes(searchTerm)) return false;
@@ -481,27 +480,38 @@ function renderTasks() {
     return true;
   });
 
-  // Compute scores for all filtered tasks
-  const scoredTasks = filtered.map(task => {
+  // Compute synergy scores for filtered tasks
+  let scoredTasks = filtered.map(task => {
     const score = synergyMode === 'relic'
       ? calculateRelicSynergyScore(task).score
       : calculateCustomSynergyScore(task).score;
     return { ...task, score };
   });
 
-  // Find the maximum score among filtered tasks
+  // Sort tasks based on dropdown selection
+  const sortValue = sortByEl.value;
+  scoredTasks.sort((a, b) => {
+    if (sortValue === 'points-desc') return Number(b.Points) - Number(a.Points);
+    if (sortValue === 'points-asc') return Number(a.Points) - Number(b.Points);
+    if (sortValue === 'synergy-desc') return b.score - a.score;
+	if (sortValue === 'synergy-asc') return a.score - b.score;
+    return 0;
+  });
+
+  // Find the maximum synergy score after sorting
   const maxScore = Math.max(...scoredTasks.map(t => t.score), 0);
 
+  // Render tasks in table
   scoredTasks.forEach(task => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="px-4 py-2 text-sm">${escapeHtml(task.Task)}</td>
-      <td class="px-4 py-2 text-sm">${task.score}</td>
+      <td class="px-4 py-2 text-sm">${task.Points || 0}</td>
       <td class="px-4 py-2 text-sm">${escapeHtml(task.Requirements || 'N/A')}</td>
       <td class="px-4 py-2 text-sm">${task.score}</td>
     `;
 
-    // Apply coloring
+    // Apply coloring based on synergy score
     if (task.score === maxScore && maxScore > 0) tr.classList.add('bg-green-200'); // top synergy
     else if (task.score >= 4) tr.classList.add('bg-green-100');
     else if (task.score >= 2) tr.classList.add('bg-yellow-100');
@@ -510,10 +520,9 @@ function renderTasks() {
     taskTableBodyEl.appendChild(tr);
   });
 
-  // Update total points
+  // Update total synergy points
   totalPointsEl.textContent = scoredTasks.reduce((sum, t) => sum + t.score, 0);
 }
-
 
 
 /* ---------------------------
@@ -543,10 +552,7 @@ function loadCustomSynergies() {
    Event listeners
    --------------------------- */
 taskSearchEl.addEventListener('input', renderTasks);
-synergyModeToggleEl.addEventListener('change', e => {
-  synergyMode = e.target.checked ? 'custom' : 'relic';
-  renderTasks();
-});
+sortByEl.addEventListener('change', renderTasks);
 
 saveSynergyBtn.addEventListener('click', () => {
   const name = synergyNameInput.value.trim();
@@ -575,6 +581,44 @@ clearRelicsBtn.addEventListener('click', () => {
   saveRelicsToStorage();           // Clear local storage
 });
 
+// Initialize synergy mode buttons
+function initSynergyModeToggle() {
+  synergyModeToggleEl.querySelectorAll('button').forEach(btn => {
+    const mode = btn.dataset.synergyMode;
+
+    // Apply active/inactive styling based on current mode
+    if (mode === synergyMode) {
+      btn.classList.add('bg-blue-500', 'text-white', 'active');
+      btn.classList.remove('bg-gray-300', 'text-gray-700');
+    } else {
+      btn.classList.remove('bg-blue-500', 'text-white', 'active');
+      btn.classList.add('bg-gray-300', 'text-gray-700');
+    }
+
+    // Click handler
+    btn.addEventListener('click', () => {
+      // Remove active styling from all buttons
+      synergyModeToggleEl.querySelectorAll('button').forEach(b => {
+        b.classList.remove('bg-blue-500', 'text-white', 'active');
+        b.classList.add('bg-gray-300', 'text-gray-700');
+      });
+
+      // Activate clicked button
+      btn.classList.add('bg-blue-500', 'text-white', 'active');
+      btn.classList.remove('bg-gray-300', 'text-gray-700');
+
+      // Update mode
+      synergyMode = mode;
+
+      // Rerender task table and synergy categories
+      renderTasks();
+      renderSynergyCategories(); // <-- ensures category buttons are highlighted
+    });
+  });
+}
+
+
+
 /* ---------------------------
    Init
    --------------------------- */
@@ -588,7 +632,7 @@ clearRelicsBtn.addEventListener('click', () => {
   renderAreaButtons();
   renderSynergyCategories();
   renderTasks();
-
+  initSynergyModeToggle();
   setInterval(saveRelicsToStorage, 2000);
 })();
 </script>
