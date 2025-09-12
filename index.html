@@ -236,7 +236,7 @@ function renderSelectedRelicDetails() {
     let displayName = sel.name;
 
     if (relicTierData) {
-      // Special case: Tier 4, Relic2
+      // Special case: Tier 4, Relic2 (Rejuvenated)
       if (tier === 4 && sel.name === relicTierData.Relic2) {
         const lowerTiers = relicTierData.Relic2SelectableTiers || [1, 2, 3];
         const selectableRelics = [];
@@ -255,23 +255,21 @@ function renderSelectedRelicDetails() {
           });
         });
 
-        // Set initial selection
         const initialRelic = selectableRelics.find(r => r.name === sel.name) || selectableRelics[0];
         details = initialRelic.details;
         const tier4Image = relicTierData.Relic2Image || '';
         const chosenImage = initialRelic.image;
 
-        // Render table row with side-by-side images
         const tr = document.createElement('tr');
         tr.className = 'border-b border-gray-200';
         tr.innerHTML = `
           <td class="px-4 py-2 text-sm text-gray-900">Tier ${tier}</td>
-          <td class="px-4 py-2 text-sm text-gray-900 flex flex-col gap-2">
-            <div class="flex items-center gap-2">
-              <img src="${tier4Image}" class="w-14 h-14 object-contain rounded-full" id="tier4-icon">
-              <img src="${chosenImage}" class="w-12 h-12 object-contain rounded-full tier4-chosen-img">
+          <td class="px-4 py-2 text-sm text-gray-900 flex items-center gap-2">
+            <div class="flex items-center gap-1">
+              <img src="${tier4Image}" class="w-7 h-7 object-contain rounded-full">
+              <img src="${chosenImage}" class="w-6 h-6 object-contain rounded-full">
             </div>
-            <select class="tier4-relic2-select w-full p-1 border rounded">
+            <select class="tier4-relic2-select ml-2 p-1 border rounded">
               ${selectableRelics.map(r => `<option value="${r.name}" ${r.name === initialRelic.name ? 'selected' : ''}>${r.name}</option>`).join('')}
             </select>
           </td>
@@ -279,21 +277,20 @@ function renderSelectedRelicDetails() {
         `;
         selectedRelicsTableBodyEl.appendChild(tr);
 
-        // Add listener to update chosen relic image & details dynamically
         const selectEl = tr.querySelector('.tier4-relic2-select');
         const detailsEl = tr.querySelector('#tier4-relic2-details');
-        const chosenImgEl = tr.querySelector('.tier4-chosen-img');
+        const chosenImgEl = tr.querySelectorAll('img')[1];
 
         selectEl.addEventListener('change', (e) => {
           const chosen = selectableRelics.find(r => r.name === e.target.value);
           if (chosen) {
             detailsEl.textContent = chosen.details;
             chosenImgEl.src = chosen.image;
-            selectedRelics[tier].name = chosen.name; // update global selection
+            selectedRelics[tier].name = chosen.name;
           }
         });
 
-        return; // skip normal rendering for this row
+        return; // skip normal rendering
       }
 
       // Normal relics rendering
@@ -318,10 +315,6 @@ function renderSelectedRelicDetails() {
     selectedRelicsTableBodyEl.appendChild(tr);
   });
 }
-
-
-
-
 
 
 function renderRelicDropdowns() {
