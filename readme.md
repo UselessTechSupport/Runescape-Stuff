@@ -28,7 +28,6 @@ A web-based tool for planning and optimizing your relic selections and tasks in 
   Selected relics and custom synergies persist across sessions automatically.
 
 - **Interactive UI**:  
-  Responsive TailwindCSS design with buttons, dropdowns, tables, and interactive toggles.
 
 ---
 
@@ -50,8 +49,10 @@ A web-based tool for planning and optimizing your relic selections and tasks in 
 To run the Catalyst League Planner locally on your computer:
 
 1. **Clone or download the repository**  
-   '''bash
-   git clone https://github.com/UselessTechSupport/Runescape-Stuff.git '''
+
+>     bash
+>     git clone https://github.com/UselessTechSupport/Runescape-Stuff.git
+
 or download the ZIP and extract it.
 
 2. **Ensure JSON data files are present**
@@ -150,9 +151,3 @@ All selections and custom rules are automatically saved in your browser’s Loca
 ## 📜 License
 
 This project is open-source and free to use.
-
----
-
-## 👨‍💻 Author
-
-Created for RS3 Leagues planning and synergy optimization.
